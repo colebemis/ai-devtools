@@ -29,6 +29,18 @@ export default declare((api) => {
           return;
         }
 
+        // Ignore elements with `data-dev-ignore` attribute
+        if (
+          path.node.openingElement.attributes.some(
+            (attr) =>
+              t.isJSXAttribute(attr) &&
+              t.isJSXIdentifier(attr.name) &&
+              attr.name.name === "data-dev-ignore"
+          )
+        ) {
+          return;
+        }
+
         // TODO: Ignore fragments
 
         const source = JSON.stringify({
