@@ -1,0 +1,16 @@
+[data-dev-enabled="true"] {
+  --dev-color-outline: #0d99ff;
+}
+
+[data-dev-enabled="true"] * {
+  cursor: default;
+}
+
+[data-dev-enabled="true"] [data-dev-hover] {
+  outline: 1px solid var(--dev-color-outline);
+}
+
+[data-dev-enabled="true"] [data-dev-selected] {
+  outline: 2px solid var(--dev-color-outline);
+  animation-play-state: paused !important;
+}

@@ -9,7 +9,7 @@ export default declare((api) => {
     // TODO: Give this plugin a more descriptive name
     name: "babel-plugin",
     visitor: {
-      // Add `data-source` attribute to HTML elements
+      // Add source attribute to HTML elements
       JSXElement(path, state) {
         // Only run in development
         if (process.env.NODE_ENV !== "development") return;
@@ -36,11 +36,10 @@ export default declare((api) => {
           location,
         });
 
-        // Add `data-source` attribute
+        // Add source attribute
         path.node.openingElement.attributes.push(
           t.jsxAttribute(
-            // TODO: Add a prefix to avoid collisions
-            t.jsxIdentifier("data-source"),
+            t.jsxIdentifier(`data-dev-source`),
             t.jsxExpressionContainer(t.stringLiteral(source))
           )
         );
