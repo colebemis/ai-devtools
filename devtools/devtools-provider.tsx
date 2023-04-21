@@ -116,6 +116,7 @@ export function DevtoolsProvider({
 
   const unregisterElement = React.useCallback((uuid: string) => {
     setElementMap((elementMap) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [uuid]: _, ...rest } = elementMap;
       return rest;
     });
