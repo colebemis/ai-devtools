@@ -36,6 +36,7 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.0.2",
     "vite": "^4.3.0",
-    "vite-plugin-inspect": "^0.7.24"
+    "vite-plugin-inspect": "^0.7.24",
+    "zod": "^3.21.4"
   }
 }
