@@ -1,6 +1,21 @@
 import React from "react";
 import { useEvent } from "react-use";
 import "./index.css";
+import { types } from "@babel/core";
+
+type ElementData = {
+  uuid: string;
+  filename: string;
+  location: types.SourceLocation;
+};
+
+export const DevtoolsContext = React.createContext<{
+  registerElement: (elementData: ElementData) => void;
+  unregisterElement: (uuid: string) => void;
+}>({
+  registerElement: () => null,
+  unregisterElement: () => null,
+});
 
 export function DevtoolsProvider({
   dev,
@@ -11,6 +26,9 @@ export function DevtoolsProvider({
     React.useState<HTMLElement>(null);
   const [hoveredElement, setHoveredElement] = React.useState<HTMLElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [elementMap, setElementMap] = React.useState<
+    Record<string, ElementData>
+  >({});
 
   function resetState() {
     setSelectedElement(null);
@@ -86,37 +104,80 @@ export function DevtoolsProvider({
     { capture: true }
   );
 
+  const registerElement = React.useCallback(
+    ({ uuid, filename, location }: ElementData) => {
+      setElementMap((elementMap) => ({
+        ...elementMap,
+        [uuid]: { uuid, filename, location },
+      }));
+    },
+    []
+  );
+
+  const unregisterElement = React.useCallback((uuid: string) => {
+    setElementMap((elementMap) => {
+      const { [uuid]: _, ...rest } = elementMap;
+      return rest;
+    });
+  }, []);
+
+  const contextValue = React.useMemo(
+    () => ({ registerElement, unregisterElement }),
+    [registerElement, unregisterElement]
+  );
+
   if (!dev) return <>{children}</>;
 
   return (
-    <div data-devtools-enabled={isEnabled}>
-      {children}
-      {isEnabled ? (
-        // TODO: Prevent page styles from affecting devtools
-        <>
-          <ElementOutline element={selectedElement} color="red" />
-          {hoveredElement !== selectedElement ? (
-            <ElementOutline element={hoveredElement} color="blue" />
-          ) : null}
-          <div
-            style={{
-              position: "fixed",
-              left: 16,
-              bottom: 16,
-            }}
-          >
-            <form>
-              <input
-                ref={inputRef}
-                type="text"
-                disabled={!selectedElement}
-                placeholder="Type a command…"
-              />
-            </form>
-          </div>
-        </>
-      ) : null}
-    </div>
+    <DevtoolsContext.Provider value={contextValue}>
+      <div data-devtools-enabled={isEnabled}>
+        {children}
+        {isEnabled ? (
+          // TODO: Prevent page styles from affecting devtools
+          <>
+            <ElementOutline element={selectedElement} color="red" />
+            {hoveredElement !== selectedElement ? (
+              <ElementOutline element={hoveredElement} color="blue" />
+            ) : null}
+            <div
+              style={{
+                position: "fixed",
+                left: 16,
+                bottom: 16,
+              }}
+            >
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+
+                  if (!selectedElement) return;
+
+                  const formElement = event.currentTarget;
+                  const formData = new FormData(formElement);
+                  const command = formData.get("command") as string;
+                  const { filename, location } =
+                    elementMap[selectedElement.dataset.uuid];
+
+                  // TODO: Send request to server
+                  console.log({ command, filename, location });
+
+                  // Reset form
+                  formElement.reset();
+                }}
+              >
+                <input
+                  ref={inputRef}
+                  aria-label="Command"
+                  name="command"
+                  type="text"
+                  placeholder="Type a command…"
+                />
+              </form>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </DevtoolsContext.Provider>
   );
 }
 
