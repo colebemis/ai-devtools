@@ -159,8 +159,18 @@ export function DevtoolsProvider({
                   const { filename, location } =
                     elementMap[selectedElement.dataset.uuid];
 
-                  // TODO: Send request to server
-                  console.log({ command, filename, location });
+                  // Send POST request to localhost:1234
+                  fetch("http://localhost:1234", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      command,
+                      filename,
+                      location,
+                    }),
+                  });
 
                   // Reset form
                   formElement.reset();
