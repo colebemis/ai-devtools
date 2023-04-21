@@ -1,26 +1,3 @@
-[data-dev-enabled="true"] * {
+[data-devtools-enabled="true"] * {
   cursor: default;
-}
-
-[data-dev-enabled="true"] [data-dev-hover] {
-  outline: 1px solid dodgerblue;
-}
-
-[data-dev-enabled="true"] [data-dev-selected] {
-  outline: 2px solid dodgerblue;
-  animation-play-state: paused !important;
-}
-
-[data-dev-enabled="true"] [data-dev-input] {
-  padding: 8px 12px;
-  appearance: none;
-  font-size: 14px;
-  border: 1px solid gainsboro;
-  background-color: white;
-  width: 300px;
-}
-
-[data-dev-enabled="true"] [data-dev-input]:focus {
-  outline: 2px solid dodgerblue;
-  border-color: transparent;
 }
