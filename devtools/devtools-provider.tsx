@@ -199,6 +199,16 @@ export function DevtoolsProvider({
                   name="command"
                   type="text"
                   placeholder="Type a command…"
+                  style={{
+                    maxWidth: "calc(100vw - 32px)",
+                    width: 360,
+                    fontSize: 14,
+                    padding: "12px 16px",
+                    border: 0,
+                    boxShadow:
+                      "0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.1)",
+                    borderRadius: 6,
+                  }}
                 />
               </form>
             </div>
@@ -211,7 +221,7 @@ export function DevtoolsProvider({
 
 function ElementOutline({
   element,
-  color = "#0d99ff",
+  color = "mediumblue",
   thickness = 1,
 }: {
   element: HTMLElement;
