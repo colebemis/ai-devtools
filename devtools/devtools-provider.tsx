@@ -84,6 +84,23 @@ export function DevtoolsProvider({
   );
 
   useEvent(
+    "mouseout",
+    (event) => {
+      if (!dev || !isEnabled || !(event.target instanceof HTMLElement)) return;
+
+      if (event.target === hoveredElement) {
+        setHoveredElement(null);
+      }
+
+      // Prevent mouseout event from propagating
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    window,
+    { capture: true }
+  );
+
+  useEvent(
     "click",
     (event) => {
       if (!dev || !isEnabled || !(event.target instanceof HTMLElement)) return;
@@ -136,9 +153,9 @@ export function DevtoolsProvider({
         {isEnabled ? (
           // TODO: Prevent page styles from affecting devtools
           <>
-            <ElementOutline element={selectedElement} color="red" />
+            <ElementOutline element={selectedElement} thickness={2} />
             {hoveredElement !== selectedElement ? (
-              <ElementOutline element={hoveredElement} color="blue" />
+              <ElementOutline element={hoveredElement} />
             ) : null}
             <div
               style={{
@@ -194,10 +211,12 @@ export function DevtoolsProvider({
 
 function ElementOutline({
   element,
-  color,
+  color = "#0d99ff",
+  thickness = 1,
 }: {
   element: HTMLElement;
-  color: string;
+  color?: string;
+  thickness?: number;
 }) {
   const [outline, setOutline] = React.useState<DOMRect>(null);
 
@@ -218,7 +237,7 @@ function ElementOutline({
     };
   }, [element]);
 
-  if (!outline) return null;
+  if (!element || !outline) return null;
 
   return (
     <div
@@ -228,8 +247,8 @@ function ElementOutline({
         left: outline.left,
         width: outline.width,
         height: outline.height,
-        outline: `2px solid ${color}`,
-        outlineOffset: -2,
+        outline: `${thickness}px solid ${color}`,
+        outlineOffset: -thickness,
         pointerEvents: "none",
       }}
     >
@@ -244,6 +263,7 @@ function ElementOutline({
           backgroundColor: color,
           color: "white",
           padding: "0 4px",
+          borderRadius: 2,
         }}
       >
         {element.tagName.toLowerCase()}
