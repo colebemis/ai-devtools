@@ -45,7 +45,7 @@ app.post("/", async (req, res) => {
 
   const code = getTextInRange(filename, location as types.SourceLocation);
 
-  const prompt = `Only respond with code. Don't include an explaination.
+  const prompt = `Only respond with code. Don't include an explanation.
   
 ${code}
 
