@@ -4,13 +4,26 @@ import cors from "cors";
 import express from "express";
 import fs from "fs";
 import { z } from "zod";
-
-const PORT = 1234;
+import { Configuration, OpenAIApi } from "openai";
+import dotenv from "dotenv";
 
 const app = express();
 
 app.use(cors({ maxAge: 600 }));
 app.use(bodyParser.json());
+
+// Load environment variables from .env file
+dotenv.config();
+
+// Create an OpenAI API client
+const OPENAI_MODEL = "text-davinci-003";
+
+const configuration = new Configuration({
+  organization: "org-ZYoPGVTVD0k5w6tAahZnpGe8",
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
 
 const bodySchema = z.object({
   command: z.string(),
@@ -27,14 +40,46 @@ const bodySchema = z.object({
   }),
 });
 
-app.post("/", (req, res) => {
-  const { filename, location } = bodySchema.parse(req.body);
+app.post("/", async (req, res) => {
+  const { command, filename, location } = bodySchema.parse(req.body);
+
   const code = getTextInRange(filename, location as types.SourceLocation);
-  console.log(code);
+
+  const prompt = `Only respond with code. Don't include an explaination.
+  
+${code}
+
+${command}`;
+
+  try {
+    const { data } = await openai.createCompletion({
+      model: OPENAI_MODEL,
+      prompt,
+      max_tokens: 256,
+      temperature: 0.5,
+    });
+
+    const { choices } = data;
+
+    if (choices.length == 0) {
+      // TODO: Handle no choices
+      return;
+    }
+
+    const { text } = choices[0];
+
+    if (text) {
+      replaceTextInRange(filename, location as types.SourceLocation, text);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
   res.send("OK");
 });
 
 // TODO: Don't hardcode port number
+const PORT = 1234;
 app.listen(PORT, () => {
   console.log(`Devtools server listening on port ${PORT}`);
 });
@@ -59,4 +104,33 @@ function getTextInRange(filename: string, location: types.SourceLocation) {
   const text = lines.join("\n");
 
   return text;
+}
+
+function replaceTextInRange(
+  filename: string,
+  location: types.SourceLocation,
+  newText: string
+) {
+  // Read the contents of the file into an array of lines
+  const sourceLines = fs.readFileSync(filename, "utf8").split("\n");
+
+  // Get the start and end lines of the selected range
+  const startLine = sourceLines[location.start.line - 1];
+  const endLine = sourceLines[location.end.line - 1];
+
+  // Construct the new line by concatenating the text before the start column,
+  // the new text, and the text after the end column
+  const newLine = `${startLine.slice(
+    0,
+    location.start.column
+  )}${newText}${endLine.slice(location.end.column)}`;
+
+  // Replace the selected lines with the new line
+  sourceLines.splice(
+    location.start.line - 1,
+    location.end.line - location.start.line + 1,
+    newLine
+  );
+
+  fs.writeFileSync(filename, sourceLines.join("\n"));
 }
